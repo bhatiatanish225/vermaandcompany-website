@@ -55,7 +55,7 @@ const heroSlides = [
   { image: "images/ddd.jpg", alt: "Elegant bathroom fixtures from Verma and Company." },
   { image: "images/fouth.jpg", alt: "Modern kitchen and bathroom solutions." },
   { image: "images/second.jpg", alt: "A wide range of high-quality sanitary goods." },
-  { image: "images/thisrf.jpg", alt: "The best sanitary goods in Patiala." },
+  
 ];  
 
 // --- Category Card Component ---
