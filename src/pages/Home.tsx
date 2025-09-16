@@ -49,13 +49,14 @@ const categoryDataWithImages = [
     { name: "Kitchen", description: "Modern sinks, faucets, and essentials for your kitchen.", image: "https://images.pexels.com/photos/7018400/pexels-photo-7018400.jpeg?auto=compress&cs=tinysrgb&w=1260" },
 ];
 
-
+// NEW: Update this array with your own image paths from the `public/images` folder
 const heroSlides = [
-  { image: "https://images.pexels.com/photos/6585627/pexels-photo-6585627.jpeg?auto=compress&cs=tinysrgb&w=1920", alt: "Close-up of a minimalist stainless steel faucet." },
-  { image: "https://images.pexels.com/photos/7238202/pexels-photo-7238202.jpeg?auto=compress&cs=tinysrgb&w=1920", alt: "A sleek, modern white ceramic washbasin with a chrome faucet." },
-  { image: "https://images.pexels.com/photos/7192461/pexels-photo-7192461.jpeg?auto=compress&cs=tinysrgb&w=1920", alt: "A wall-mounted, contemporary toilet in a brightly lit bathroom." },
-  { image: "https://images.pexels.com/photos/8134913/pexels-photo-8134913.jpeg?auto=compress&cs=tinysrgb&w=1920", alt: "Luxurious chrome shower head with water flowing in a modern shower." },
-];
+  { image: "images/5th.jpg", alt: "A showcase of premium sanitary ware." },
+  { image: "images/ddd.jpg", alt: "Elegant bathroom fixtures from Verma and Company." },
+  { image: "images/fouth.jpg", alt: "Modern kitchen and bathroom solutions." },
+  { image: "images/second.jpg", alt: "A wide range of high-quality sanitary goods." },
+  { image: "images/thisrf.jpg", alt: "The best sanitary goods in Patiala." },
+];  
 
 // --- Category Card Component ---
 const CategoryCard: React.FC<{ category: any; index: number }> = ({ category, index }) => {
@@ -146,7 +147,8 @@ const Home: React.FC = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const heroTitle = "Verma & Company: Precision, Style, Durability".split(" ");
+  // NEW: Updated hero section title
+  const heroTitle = "Verma and Company, a house of sanitary goods".split(" ");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -197,7 +199,7 @@ const Home: React.FC = () => {
           effect="fade"
           fadeEffect={{ crossFade: true }}
           loop={true}
-          autoplay={{ delay: 2000, disableOnInteraction: false }}
+          autoplay={{ delay: 2500, disableOnInteraction: false }}
           speed={1000}
           className="absolute inset-0 w-full h-full"
         >
@@ -206,6 +208,7 @@ const Home: React.FC = () => {
               <div
                 className="w-full h-full bg-cover bg-center"
                 style={{ backgroundImage: `url(${slide.image})` }}
+                aria-label={slide.alt}
               />
             </SwiperSlide>
           ))}
@@ -223,7 +226,8 @@ const Home: React.FC = () => {
               <motion.span
                 key={index}
                 variants={childVariants}
-                className={`inline-block ${index < 2 ? 'text-amber-300' : ''}`}
+                // UPDATE: Highlight the first 3 words of the new title
+                className={`inline-block ${index < 3 ? 'text-amber-300' : ''}`}
               >
                 {word}
               </motion.span>
@@ -235,9 +239,8 @@ const Home: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
           >
-            Elevating your spaces with exquisitely designed sanitaryware and plumbing essentials since 2000.
+            Your trusted partner for all sanitary needs in Patiala since 2000.
           </motion.p>
-          {/* FIX: Added 'items-center' to ensure the button is centered on all screen sizes */}
           <motion.div
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             initial={{ opacity: 0, y: 20 }}
