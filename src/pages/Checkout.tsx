@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Truck, Shield, CheckCircle } from 'lucide-react';
+import { CreditCard, Truck, Shield, CheckCircle, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useNavigate } from 'react-router-dom';
+import toast, { Toaster } from 'react-hot-toast';
+import { RAZORPAY_CONFIG } from '../config/razorpay';
 
 const Checkout: React.FC = () => {
   const { state, dispatch } = useCart();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     firstName: '',
@@ -14,8 +20,19 @@ const Checkout: React.FC = () => {
     city: '',
     postalCode: '',
     phone: '',
-    paymentMethod: 'card'
+    paymentMethod: 'razorpay'
   });
+
+  // Redirect if cart is empty
+  useEffect(() => {
+    if (state.items.length === 0) {
+      navigate('/cart');
+    }
+  }, [state.items.length, navigate]);
+
+  const subtotal = state.total;
+  const tax = Math.round(subtotal * 0.18);
+  const total = subtotal + tax;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -24,22 +41,164 @@ const Checkout: React.FC = () => {
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (step < 3) {
-      setStep(step + 1);
-    } else {
-      // Process order
-      setTimeout(() => {
-        dispatch({ type: 'CLEAR_CART' });
-        setStep(4);
-      }, 2000);
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      // Check if Razorpay is already loaded
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  // Create Razorpay order using the correct API approach
+  const createRazorpayOrder = async () => {
+    try {
+      // Use Razorpay's orders API with proper authentication
+      const auth = btoa(`${RAZORPAY_CONFIG.key}:${RAZORPAY_CONFIG.keySecret}`);
+      
+      const response = await fetch('https://api.razorpay.com/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${auth}`
+        },
+        body: JSON.stringify({
+          amount: total * 100,
+          currency: 'INR',
+          receipt: `receipt_${Date.now()}`,
+          notes: {
+            customer_name: `${formData.firstName} ${formData.lastName}`,
+            customer_email: formData.email,
+            customer_phone: formData.phone,
+            items: state.items.map(item => `${item.name} x${item.quantity}`).join(', ')
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Razorpay API Error:', errorData);
+        throw new Error(`Failed to create order: ${errorData.error?.description || 'Unknown error'}`);
+      }
+
+      const orderData = await response.json();
+      console.log('Order created successfully:', orderData);
+      return orderData.id;
+    } catch (error) {
+      console.error('Order creation failed:', error);
+      toast.error('Failed to initialize payment. Please try again.');
+      throw error;
     }
   };
 
-  const subtotal = state.total;
-  const tax = Math.round(subtotal * 0.18);
-  const total = subtotal + tax;
+  const handleRazorpayPayment = async () => {
+    setPaymentLoading(true);
+    
+    try {
+      // Load Razorpay script
+      const res = await loadRazorpayScript();
+      if (!res) {
+        toast.error('Razorpay SDK failed to load');
+        setPaymentLoading(false);
+        return;
+      }
+
+      // Try to create order first, fallback to direct payment if it fails
+      let orderId;
+      try {
+        orderId = await createRazorpayOrder();
+      } catch (error: any) {
+        console.warn('Order creation failed, using direct payment:', error);
+        // Fallback to direct payment without order_id
+        orderId = null;
+      }
+      
+      // Create payment options
+      const options = {
+        key: RAZORPAY_CONFIG.key,
+        amount: total * 100, // Amount in paise
+        currency: RAZORPAY_CONFIG.currency,
+        name: RAZORPAY_CONFIG.name,
+        description: RAZORPAY_CONFIG.description,
+        image: RAZORPAY_CONFIG.image,
+        ...(orderId && { order_id: orderId }), // Only include order_id if we have one
+        handler: function (response: any) {
+          console.log('Payment successful:', response);
+          toast.success('Payment successful!');
+          dispatch({ type: 'CLEAR_CART' });
+          setStep(4);
+        },
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        notes: {
+          address: formData.address,
+          city: formData.city,
+          postalCode: formData.postalCode,
+        },
+        theme: RAZORPAY_CONFIG.theme,
+        modal: {
+          ondismiss: function() {
+            setPaymentLoading(false);
+          }
+        }
+      };
+
+      // Initialize Razorpay
+      const razorpay = (window as any).Razorpay;
+      if (!razorpay) {
+        throw new Error('Razorpay not loaded');
+      }
+
+      const paymentObject = new razorpay(options);
+      
+      // Handle payment events
+      paymentObject.on('payment.failed', function (response: any) {
+        console.log('Payment failed:', response);
+        toast.error(`Payment failed: ${response.error.description || 'Please try again'}`);
+        setPaymentLoading(false);
+      });
+
+      // Open payment modal
+      paymentObject.open();
+      
+    } catch (error: any) {
+      console.error('Payment error:', error);
+      toast.error(error.message || 'Payment initialization failed');
+      setPaymentLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (step < 3) {
+      setStep(step + 1);
+    } else {
+      // Process payment
+      if (formData.paymentMethod === 'razorpay') {
+        await handleRazorpayPayment();
+      } else if (formData.paymentMethod === 'cod') {
+        // Cash on Delivery
+        setLoading(true);
+        setTimeout(() => {
+          dispatch({ type: 'CLEAR_CART' });
+          setStep(4);
+          setLoading(false);
+        }, 2000);
+      }
+    }
+  };
 
   if (step === 4) {
     return (
@@ -87,6 +246,7 @@ const Checkout: React.FC = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.6 }}
     >
+      <Toaster position="top-right" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           className="text-center mb-12"
@@ -308,25 +468,44 @@ const Checkout: React.FC = () => {
                   </h2>
                   <div className="space-y-4">
                     <motion.div
-                      className="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-amber-500 transition-colors"
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        formData.paymentMethod === 'razorpay'
+                          ? 'border-amber-500 bg-amber-50'
+                          : 'border-gray-300 hover:border-amber-500'
+                      }`}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
-                      <div className="flex items-center">
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value="card"
-                          checked={formData.paymentMethod === 'card'}
-                          onChange={handleInputChange}
-                          className="mr-3"
-                        />
-                        <CreditCard className="h-5 w-5 mr-2 text-amber-800" />
-                        <span className="font-medium">Credit/Debit Card</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            name="paymentMethod"
+                            value="razorpay"
+                            checked={formData.paymentMethod === 'razorpay'}
+                            onChange={handleInputChange}
+                            className="mr-3"
+                          />
+                          <CreditCard className="h-5 w-5 mr-2 text-amber-800" />
+                          <div>
+                            <span className="font-medium">Razorpay Payment</span>
+                            <p className="text-sm text-gray-600">Cards, UPI, Net Banking, Wallets</p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-1">
+                          <div className="w-6 h-4 bg-blue-500 rounded text-white text-xs flex items-center justify-center">V</div>
+                          <div className="w-6 h-4 bg-red-500 rounded text-white text-xs flex items-center justify-center">M</div>
+                          <div className="w-6 h-4 bg-green-500 rounded text-white text-xs flex items-center justify-center">UPI</div>
+                        </div>
                       </div>
                     </motion.div>
+                    
                     <motion.div
-                      className="border border-gray-300 rounded-lg p-4 cursor-pointer hover:border-amber-500 transition-colors"
+                      className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        formData.paymentMethod === 'cod'
+                          ? 'border-amber-500 bg-amber-50'
+                          : 'border-gray-300 hover:border-amber-500'
+                      }`}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -340,23 +519,60 @@ const Checkout: React.FC = () => {
                           className="mr-3"
                         />
                         <Truck className="h-5 w-5 mr-2 text-amber-800" />
-                        <span className="font-medium">Cash on Delivery</span>
+                        <div>
+                          <span className="font-medium">Cash on Delivery</span>
+                          <p className="text-sm text-gray-600">Pay when your order arrives</p>
+                        </div>
                       </div>
                     </motion.div>
                   </div>
+                  
+                  {formData.paymentMethod === 'razorpay' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200"
+                    >
+                      <div className="flex items-start">
+                        <Shield className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-blue-900">Secure Payment</h4>
+                          <p className="text-sm text-blue-700">
+                            Your payment information is encrypted and secure. We support all major cards, UPI, and digital wallets.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
 
               <motion.button
                 type="submit"
-                className="w-full bg-amber-800 text-white py-3 rounded-lg font-semibold hover:bg-amber-900 transition-colors mt-8 flex items-center justify-center space-x-2"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                disabled={loading || paymentLoading}
+                className={`w-full py-3 rounded-lg font-semibold transition-colors mt-8 flex items-center justify-center space-x-2 ${
+                  loading || paymentLoading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-amber-800 hover:bg-amber-900'
+                }`}
+                whileHover={!loading && !paymentLoading ? { scale: 1.02 } : {}}
+                whileTap={!loading && !paymentLoading ? { scale: 0.98 } : {}}
               >
-                <span>
-                  {step < 3 ? 'Continue' : 'Place Order'}
-                </span>
-                {step === 3 && <Shield className="h-5 w-5" />}
+                {loading || paymentLoading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>
+                      {paymentLoading ? 'Processing Payment...' : 'Processing Order...'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span>
+                      {step < 3 ? 'Continue' : formData.paymentMethod === 'razorpay' ? 'Pay Now' : 'Place Order'}
+                    </span>
+                    {step === 3 && <Shield className="h-5 w-5" />}
+                  </>
+                )}
               </motion.button>
             </motion.form>
           </div>

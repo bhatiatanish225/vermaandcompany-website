@@ -3,12 +3,13 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 import { Search, Grid, List, ShoppingCart, X, SlidersHorizontal, Tag, DollarSign, ChevronRight } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import toast, { Toaster } from "react-hot-toast";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Slider from 'rc-slider';
+import { products as localProducts } from '../data/products';
 
 const API_BASE_URL = "https://sanitaryshop-backend-2.onrender.com";
 const PUBLIC_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTQsImVtYWlsIjoidGJoYXRpYTEyMzQ1NkBnbWFpbC5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc1NzkyMjE2MiwiZXhwIjoxNzU4NTI2OTYyfQ.2j3UEdtmkU3fyN2KVeq0aIrAqFxrn8JKGOEB_BwZ8YY";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MjMsImVtYWlsIjoidGVzdDFAZ21haWwuY29tIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NjEwNTY0MjIsImV4cCI6MTc2MTY2MTIyMn0.P5cwWg3WA7kxgVoo3t7aUXsE22CcnNjq3rSKyuMyQt0";
 
 // --- Animation Variants ---
 const containerVariants: Variants = {
@@ -143,24 +144,110 @@ const FilterSidebar: React.FC<{
     </div>
     <div>
         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center"><DollarSign className="h-5 w-5 mr-2 text-amber-800"/> Price Range</h3>
-        <div className="px-2">
+        
+        {/* Price Input Fields */}
+        <div className="flex items-center space-x-2 mb-4">
+            <div className="flex-1">
+                <label className="block text-xs text-gray-600 mb-1">Min Price</label>
+                <input
+                    type="number"
+                    value={priceRange[0]}
+                    onChange={(e) => setPriceRange([Number(e.target.value) || 0, priceRange[1]])}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    placeholder="0"
+                    min="0"
+                    max={maxPrice}
+                />
+            </div>
+            <div className="flex-1">
+                <label className="block text-xs text-gray-600 mb-1">Max Price</label>
+                <input
+                    type="number"
+                    value={priceRange[1]}
+                    onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value) || maxPrice])}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                    placeholder={maxPrice.toString()}
+                    min="0"
+                    max={maxPrice}
+                />
+            </div>
+        </div>
+
+        {/* Enhanced Slider */}
+        <div className="px-2 mb-4">
             <Slider
                 range
                 min={0}
                 max={maxPrice}
-                defaultValue={[0, maxPrice]}
                 value={priceRange}
                 onChange={(value) => setPriceRange(value as [number, number])}
                 trackStyle={[{ backgroundColor: '#92400e' }]}
-                handleStyle={[{ borderColor: '#92400e', backgroundColor: 'white', borderWidth: 2 }, { borderColor: '#92400e', backgroundColor: 'white', borderWidth: 2 }]}
-                railStyle={{ backgroundColor: '#e5e7eb', height: 6 }}
+                handleStyle={[
+                    { 
+                        borderColor: '#92400e', 
+                        backgroundColor: 'white', 
+                        borderWidth: 3,
+                        width: 20,
+                        height: 20,
+                        marginTop: -8,
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                    }, 
+                    { 
+                        borderColor: '#92400e', 
+                        backgroundColor: 'white', 
+                        borderWidth: 3,
+                        width: 20,
+                        height: 20,
+                        marginTop: -8,
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                    }
+                ]}
+                railStyle={{ backgroundColor: '#e5e7eb', height: 8, borderRadius: 4 }}
                 dotStyle={{ display: 'none' }}
                 activeDotStyle={{ display: 'none' }}
             />
         </div>
-        <div className="flex justify-between text-sm text-gray-600 mt-2">
-            <span>₹{priceRange[0]}</span>
-            <span>₹{maxPrice}</span>
+
+        {/* Price Range Display */}
+        <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">₹{priceRange[0].toLocaleString()}</span>
+            <span className="text-gray-400">to</span>
+            <span className="text-gray-600">₹{priceRange[1].toLocaleString()}</span>
+        </div>
+
+        {/* Quick Price Filters */}
+        <div className="mt-4">
+            <div className="flex flex-wrap gap-2">
+                {[
+                    { label: "Under ₹500", range: [0, 500] },
+                    { label: "₹500 - ₹1000", range: [500, 1000] },
+                    { label: "₹1000 - ₹2500", range: [1000, 2500] },
+                    { label: "₹2500 - ₹5000", range: [2500, 5000] },
+                    { label: "Above ₹5000", range: [5000, maxPrice] }
+                ].map((filter) => (
+                    <button
+                        key={filter.label}
+                        onClick={() => setPriceRange(filter.range as [number, number])}
+                        className={`px-3 py-1 text-xs rounded-full border transition-colors ${
+                            priceRange[0] === filter.range[0] && priceRange[1] === filter.range[1]
+                                ? 'bg-amber-800 text-white border-amber-800'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-amber-800'
+                        }`}
+                    >
+                        {filter.label}
+                    </button>
+                ))}
+            </div>
+            
+            {/* Clear Price Filter Button */}
+            {(priceRange[0] > 0 || priceRange[1] < maxPrice) && (
+                <button
+                    onClick={() => setPriceRange([0, maxPrice])}
+                    className="mt-3 w-full px-4 py-2 text-sm text-amber-800 border border-amber-800 rounded-md hover:bg-amber-50 transition-colors"
+                >
+                    Clear Price Filter
+                </button>
+            )}
         </div>
     </div>
     <div>
@@ -183,25 +270,119 @@ const Shop: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const location = useLocation() as { state?: { selectedCategory?: string } };
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   
   const maxPrice = useMemo(() => Math.max(...products.map(p => p.price), 50000), [products]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, maxPrice]);
 
   const { dispatch } = useCart();
 
+  const normalizeProducts = (list: any[]) => {
+    return (Array.isArray(list) ? list : []).map((p: any) => {
+      const priceNumber = typeof p.price === 'string' ? Number(p.price) : p.price;
+      return {
+        id: p.id ?? p.product_id ?? crypto.randomUUID?.() ?? Math.random(),
+        name: p.name ?? p.title ?? 'Unnamed Product',
+        description: p.description ?? '',
+        price: Number.isFinite(priceNumber) ? priceNumber : 0,
+        imageUrl: p.imageUrl ?? p.image_url ?? p.image ?? '',
+        category: typeof p.category === 'string' ? { name: p.category } : (p.category ?? { name: 'Uncategorized' }),
+      };
+    });
+  };
+
+  const fetchPage = async (pageToLoad: number) => {
+    const url = `${API_BASE_URL}/api/products?page=${pageToLoad}&limit=20`;
+    const withAuth = await fetch(url, { headers: { 'Authorization': `Bearer ${PUBLIC_TOKEN}`, 'Content-Type': 'application/json' } });
+    if (withAuth.status === 401) {
+      const withoutAuth = await fetch(url);
+      return withoutAuth;
+    }
+    return withAuth;
+  };
+
+  // Initial load
   useEffect(() => {
-    fetch(`${API_BASE_URL}/api/products`, { headers: { Authorization: `Bearer ${PUBLIC_TOKEN}` } })
-      .then(res => res.json())
+    fetchPage(1)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then(data => {
-        const productData = data.products || data;
-        const validProducts = Array.isArray(productData) ? productData : [];
-        setProducts(validProducts);
-        const prices = validProducts.map(p => p.price).filter(p => typeof p === 'number');
+        const productData = (data && (data.products || data)) || [];
+        const normalized = normalizeProducts(productData);
+        setProducts(normalized);
+        setHasMore(Array.isArray(productData) ? productData.length === 20 : normalized.length === 20);
+
+        const prices = normalized.map(p => p.price).filter((v) => typeof v === 'number' && Number.isFinite(v));
+        const max = prices.length > 0 ? Math.ceil(Math.max(...prices) / 1000) * 1000 : 50000;
+        setPriceRange([0, max]);
+        setPage(2);
+      })
+      .catch(err => {
+        console.error("Error fetching products:", err);
+        // Fallback to local products if API fails
+        const fallbackProducts = localProducts.map(p => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || '',
+          price: p.price,
+          imageUrl: p.image,
+          category: { name: p.category }
+        }));
+        setProducts(fallbackProducts);
+        setHasMore(false);
+        const prices = fallbackProducts.map(p => p.price).filter((v) => typeof v === 'number' && Number.isFinite(v));
         const max = prices.length > 0 ? Math.ceil(Math.max(...prices) / 1000) * 1000 : 50000;
         setPriceRange([0, max]);
       })
-      .catch(err => { console.error("Error fetching products:", err); setProducts([]); })
       .finally(() => setLoading(false));
+  }, []);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!hasMore || loading || loadingMore) return;
+    const sentinel = document.getElementById('infinite-scroll-sentinel');
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      const first = entries[0];
+      if (first.isIntersecting && !loadingMore && hasMore) {
+        setLoadingMore(true);
+        fetchPage(page)
+          .then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+          })
+          .then(data => {
+            const productData = (data && (data.products || data)) || [];
+            const normalized = normalizeProducts(productData);
+            setProducts(prev => [...prev, ...normalized]);
+            setHasMore(Array.isArray(productData) ? productData.length === 20 : normalized.length === 20);
+            setPage(prev => prev + 1);
+          })
+          .catch(err => {
+            console.error('Error fetching more products:', err);
+            setHasMore(false);
+          })
+          .finally(() => setLoadingMore(false));
+      }
+    }, { rootMargin: '200px' });
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [page, hasMore, loading, loadingMore]);
+
+  // Preselect category when navigating from Categories page
+  useEffect(() => {
+    const incoming = location.state?.selectedCategory;
+    if (incoming && typeof incoming === 'string') {
+      setSelectedCategory(incoming);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAddToCart = (product: any) => {
@@ -290,6 +471,14 @@ const Shop: React.FC = () => {
                 {filteredProducts.map((product) => viewMode === 'grid' ? <ProductCardGrid key={product.id} product={product} onAddToCart={handleAddToCart} /> : <ProductCardList key={product.id} product={product} onAddToCart={handleAddToCart} />)}
               </AnimatePresence>
             </motion.div>
+
+            {/* Infinite scroll loader and sentinel */}
+            <div className="flex justify-center py-6">
+              {loadingMore && (
+                <div className="text-sm text-gray-600">Loading more products…</div>
+              )}
+            </div>
+            <div id="infinite-scroll-sentinel" className="h-1"></div>
 
             <AnimatePresence>
                 {filteredProducts.length === 0 && !loading && (

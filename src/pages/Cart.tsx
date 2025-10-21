@@ -89,7 +89,7 @@ const Cart: React.FC = () => {
                 >
                   <Link to={`/product/${item.id}`} className="col-span-2">
                     <img
-                      src={item.image}
+                      src={item.image || item.imageUrl || "https://via.placeholder.com/400"}
                       alt={item.name}
                       className="w-full h-auto object-cover rounded-lg aspect-square"
                     />
@@ -97,7 +97,9 @@ const Cart: React.FC = () => {
                   
                   <div className="col-span-10 sm:col-span-4">
                     <h3 className="text-lg font-semibold text-gray-900 truncate">{item.name}</h3>
-                    <p className="text-sm text-gray-500">{item.category || 'General'}</p>
+                    <p className="text-sm text-gray-500">
+                      {typeof item.category === 'string' ? item.category : item.category?.name || 'General'}
+                    </p>
                   </div>
 
                   <div className="col-span-6 sm:col-span-3 flex items-center justify-start sm:justify-center space-x-2">
