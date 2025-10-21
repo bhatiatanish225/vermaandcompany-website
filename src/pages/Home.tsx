@@ -27,7 +27,7 @@ import "swiper/css/effect-fade";
 
 const API_BASE_URL = "https://sanitaryshop-backend-2.onrender.com";
 const PUBLIC_TOKEN =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTQsImVtYWlsIjoidGJoYXRpYTEyMzQ1NkBnbWFpbC5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc1NzkyMjE2MiwiZXhwIjoxNzU4NTI2OTYyfQ.2j3UEdtmkU3fyN2KVeq0aIrAqFxrn8JKGOEB_BwZ8YY";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MjMsImVtYWlsIjoidGVzdDFAZ21haWwuY29tIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NjEwNTY0MjIsImV4cCI6MTc2MTY2MTIyMn0.P5cwWg3WA7kxgVoo3t7aUXsE22CcnNjq3rSKyuMyQt0";
 
 // --- Data & Mappings ---
 
