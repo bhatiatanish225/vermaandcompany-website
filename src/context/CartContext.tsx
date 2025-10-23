@@ -46,13 +46,13 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         newItems = [...state.items, { ...action.payload, quantity: 1 }];
       }
       
-      const total = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const total = newItems.reduce((sum, item) => sum + (Math.round(item.price / 1.18) * item.quantity), 0);
       return { items: newItems, total };
     }
     
     case 'REMOVE_FROM_CART': {
       const newItems = state.items.filter(item => item.id !== action.payload);
-      const total = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const total = newItems.reduce((sum, item) => sum + (Math.round(item.price / 1.18) * item.quantity), 0);
       return { items: newItems, total };
     }
     
@@ -63,7 +63,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
           : item
       ).filter(item => item.quantity > 0);
       
-      const total = newItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const total = newItems.reduce((sum, item) => sum + (Math.round(item.price / 1.18) * item.quantity), 0);
       return { items: newItems, total };
     }
     

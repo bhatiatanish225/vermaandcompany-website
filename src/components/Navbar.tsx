@@ -55,22 +55,34 @@ const Navbar: React.FC = () => {
             ? 'mt-0 md:mt-2 bg-white/95 shadow-lg md:rounded-full' 
             : 'mt-0 md:mt-4 bg-white/80 md:rounded-full shadow-md'
           }
-          px-4 sm:px-6 py-2
-          md:px-3 md:py-2
+          px-4 sm:px-6 py-3
+          md:px-4 md:py-3
           backdrop-blur-lg border-b md:border border-gray-200/80
         `}
       >
-        <Link to="/" className="flex items-center space-x-2 shrink-0">
+        <Link to="/" className="flex items-center space-x-3 shrink-0">
           <motion.img 
             src={logo} 
             alt="Verma & Company Logo" 
-            className="h-10 w-auto" 
-            whileHover={{ rotate: 5, scale: 1.05 }}
+            className="h-14 w-auto md:h-16 lg:h-18 rounded-lg shadow-md" 
+            whileHover={{ rotate: 5, scale: 1.1 }}
+            transition={{ type: "spring", stiffness: 300 }}
           />
+          <div className="hidden sm:block">
+            <motion.div 
+              className="text-amber-800 font-bold text-lg md:text-xl"
+              whileHover={{ scale: 1.05 }}
+            >
+              VERMA & COMPANY
+            </motion.div>
+            <div className="text-amber-600 text-xs md:text-sm font-medium">
+              Premium Sanitary Solutions
+            </div>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-1">
+        <div className="hidden lg:flex items-center space-x-1">
           {navItems.map((item) => (
             <Link
               key={item.name}
@@ -122,7 +134,7 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <motion.button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 text-gray-700 hover:text-amber-800"
@@ -148,7 +160,7 @@ const Navbar: React.FC = () => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="md:hidden bg-white/95 backdrop-blur-lg shadow-lg border-t"
+            className="lg:hidden bg-white/95 backdrop-blur-lg shadow-lg border-t"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verma & Company - Fast Animation Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #92400e, #d97706);
+            color: white;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        .entrance-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        
+        .main-content {
+            display: none;
+            padding: 40px 20px;
+            min-height: 100vh;
+            background: white;
+            color: #92400e;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            animation: logoSpin 1s ease-out;
+            border: 4px solid rgba(255,255,255,0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .company-name {
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tagline {
+            font-size: 2rem;
+            color: #fbbf24;
+            margin-bottom: 20px;
+            font-weight: 600;
+            min-height: 2.5rem;
+        }
+        
+        .products {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        
+        .product-icon {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: rgba(251, 191, 36, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            animation: productFloat 2s ease-out;
+        }
+        
+        @keyframes logoSpin {
+            from { transform: scale(0) rotate(-180deg); }
+            to { transform: scale(1) rotate(0deg); }
+        }
+        
+        @keyframes productFloat {
+            from { 
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <div class="entrance-screen" id="entrance">
+        <div class="products" id="products"></div>
+        
+        <div class="container">
+            <div class="logo">🏠</div>
+            <h1 class="company-name" id="companyName"></h1>
+            <div class="tagline" id="tagline"></div>
+        </div>
+    </div>
+    
+    <div class="main-content" id="mainContent">
+        <h1>🎉 VERMA & COMPANY</h1>
+        <h2>Welcome to our Premium Sanitary Solutions!</h2>
+        <p>This is the main home page content that loads after the fast entrance animation.</p>
+        <p><strong>Total Animation Time: ~2 seconds</strong></p>
+        <ul style="text-align: left; max-width: 600px; margin: 20px auto;">
+            <li>✅ Products float up instantly (0.2s)</li>
+            <li>✅ Company name types super fast (0.5s)</li>
+            <li>✅ Tagline types super fast (0.8s)</li>
+            <li>✅ Transition to main page (0.2s)</li>
+            <li>🚀 <strong>LIGHTNING FAST!</strong></li>
+        </ul>
+    </div>
+    
+    <script>
+        // Create floating products
+        const productIcons = ['🛁', '💧', '🔧', '🏗️', '🍽️', '🔨', '🚚', '⭐'];
+        const productsContainer = document.getElementById('products');
+        
+        productIcons.forEach((icon, i) => {
+            const div = document.createElement('div');
+            div.className = 'product-icon';
+            div.textContent = icon;
+            div.style.left = Math.random() * 80 + 10 + '%';
+            div.style.animationDelay = (i * 0.05) + 's';
+            productsContainer.appendChild(div);
+        });
+        
+        // Fast typewriter for company name
+        const companyName = document.getElementById('companyName');
+        const companyText = 'VERMA & COMPANY';
+        let companyIndex = 0;
+        
+        const typeCompanyName = () => {
+            if (companyIndex < companyText.length) {
+                companyName.textContent += companyText[companyIndex];
+                companyIndex++;
+                setTimeout(typeCompanyName, 30); // Super fast - 30ms per character
+            } else {
+                // Start tagline after company name
+                setTimeout(typeTagline, 100);
+            }
+        };
+        
+        // Fast typewriter for tagline
+        const tagline = document.getElementById('tagline');
+        const taglineText = 'Premium Sanitary Solutions';
+        let taglineIndex = 0;
+        
+        const typeTagline = () => {
+            if (taglineIndex < taglineText.length) {
+                tagline.textContent += taglineText[taglineIndex];
+                taglineIndex++;
+                setTimeout(typeTagline, 30); // Super fast - 30ms per character
+            } else {
+                // Transition to main content
+                setTimeout(showMainContent, 200);
+            }
+        };
+        
+        // Show main content
+        const showMainContent = () => {
+            const entrance = document.getElementById('entrance');
+            const mainContent = document.getElementById('mainContent');
+            
+            entrance.classList.add('fade-out');
+            setTimeout(() => {
+                entrance.style.display = 'none';
+                mainContent.style.display = 'block';
+            }, 500);
+        };
+        
+        // Start animation almost immediately
+        setTimeout(typeCompanyName, 200);
+    </script>
+</body>
+</html>

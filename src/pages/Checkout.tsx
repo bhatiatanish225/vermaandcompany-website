@@ -30,9 +30,9 @@ const Checkout: React.FC = () => {
     }
   }, [state.items.length, navigate]);
 
+  // Total is already adjusted in CartContext
   const subtotal = state.total;
-  const tax = Math.round(subtotal * 0.18);
-  const total = subtotal + tax;
+  const total = subtotal;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -603,11 +603,10 @@ const Checkout: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span className="text-green-600">Free</span>
+                  <span className="text-amber-600">Extra as per delivery partner</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Tax</span>
-                  <span>₹{tax.toLocaleString()}</span>
+                <div className="text-xs text-gray-500 mt-2">
+                  * Shipping costs will be calculated based on delivery partner and items being delivered
                 </div>
                 <hr />
                 <div className="flex justify-between text-lg font-bold text-gray-900">

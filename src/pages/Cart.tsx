@@ -15,8 +15,8 @@ const Cart: React.FC = () => {
     dispatch({ type: 'REMOVE_FROM_CART', payload: id });
   };
   
-  const tax = state.total * 0.18;
-  const grandTotal = state.total + tax;
+  // Total is already adjusted in CartContext
+  const grandTotal = state.total;
 
   if (state.items.length === 0) {
     return (
@@ -123,7 +123,7 @@ const Cart: React.FC = () => {
                   </div>
                   
                   <div className="col-span-4 sm:col-span-2 text-right">
-                      <p className="text-lg font-bold text-gray-900">₹{(item.price * item.quantity).toLocaleString()}</p>
+                      <p className="text-lg font-bold text-gray-900">₹{(Math.round(item.price / 1.18) * item.quantity).toLocaleString()}</p>
                   </div>
 
                   <div className="col-span-2 sm:col-span-1 flex justify-end">
@@ -157,11 +157,10 @@ const Cart: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span className="font-semibold text-green-600">FREE</span>
+                  <span className="font-semibold text-amber-600">Extra as per delivery</span>
                 </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Tax (18%)</span>
-                  <span>₹{tax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <div className="text-xs text-gray-500 mt-2">
+                  * Shipping costs will be calculated based on delivery partner and items being delivered
                 </div>
                 <div className="border-t pt-4 mt-4 flex justify-between text-xl font-extrabold text-gray-900">
                   <span>Total</span>

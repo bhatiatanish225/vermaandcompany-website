@@ -90,7 +90,7 @@ const ProductCardGrid: React.FC<{ product: any; onAddToCart: (product: any) => v
       <div className="p-4 flex flex-col flex-grow">
         <h2 className="text-lg font-semibold text-gray-900 truncate">{product.name}</h2>
         <p className="text-gray-600 text-sm mt-1 mb-4 flex-grow">{product.description?.substring(0, 60)}...</p>
-        <span className="text-amber-800 text-xl font-bold mt-auto">₹{product.price}</span>
+        <span className="text-amber-800 text-xl font-bold mt-auto">₹{Math.round(product.price / 1.18)}</span>
       </div>
     </motion.div>
 );
@@ -108,7 +108,7 @@ const ProductCardList: React.FC<{ product: any; onAddToCart: (product: any) => v
             <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
             <p className="text-gray-600 text-sm mt-2 mb-4 flex-grow">{product.description}</p>
             <div className="flex items-center justify-between mt-auto">
-                <span className="text-amber-800 text-2xl font-extrabold">₹{product.price}</span>
+                <span className="text-amber-800 text-2xl font-extrabold">₹{Math.round(product.price / 1.18)}</span>
                 <motion.button onClick={() => onAddToCart(product)} className="bg-amber-800 text-white px-6 py-2 rounded-full hover:bg-amber-900 transition-colors flex items-center space-x-2" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <ShoppingCart className="h-5 w-5" />
                     <span>Add to Cart</span>

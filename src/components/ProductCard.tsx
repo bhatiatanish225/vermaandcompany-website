@@ -62,7 +62,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
         
         <div className="flex items-center justify-between">
           <span className="text-xl font-bold text-amber-800">
-            ₹{product.price.toLocaleString()}
+            ₹{Math.round(product.price / 1.18).toLocaleString()}
           </span>
           
           <motion.button
